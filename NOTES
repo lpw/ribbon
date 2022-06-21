@@ -1,0 +1,24 @@
+https://github.com/lpw/ribbon
+
+// Hacked from Yuri at 
+// https://www.youtube.com/watch?v=87J8EhKMH6c  
+// https://www.patreon.com/allyourhtml/posts
+// https://gist.github.com/akella/a19954c9ee42e3ae85b76d0e06977535
+
+$ npm i
+$ PATH=$PATH:./node_modules/.bin/
+$ parcel index.html
+
+ideas for improvement:
+banking based on curves (derivations of normals/tangents)
+edges on path (lines, tubes)
+translucency and shading, esp in the middle of the ribbon
+time/distance tracks
+altitude bridges, mapping to ground
+speckling along path
+better path colors, materials, translucency, shading, gradients, lighting, reflection, speckling, ...
+other examples like AceTracks?
+more waypoints, fancier paths, more accurate registration when introduced on maps
+cleanup endpoints of ribbon (like line caps)
+general translucency of ribbon to see underneath like maps
+aircraft obj overlay - loading, orientation, translation, animations
