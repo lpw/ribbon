@@ -41,14 +41,15 @@ export default class Ribbon {
       1000
     );
 
-    this.camera.position.set(0, 0, 2);
+    // this.camera.position.set(0, 0, 2);
+    this.camera.position.set(0, 0.5, 2);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.time = 0;
 
     this.isPlaying = true;
     
     this.addObjects();
-    this.resize();
+    // this.resize();
     this.render();
     // this.setupResize();
     this.addLights()
@@ -107,8 +108,27 @@ export default class Ribbon {
     // frontTexture.flipY = false
 
 
+    // let frontMaterial = new THREE.MeshStandardMaterial({
+    //   map: frontTexture,
+    //   side: THREE.BackSide,
+    //   roughness: 0.65,
+    //   metalness: 0.25,
+    //   alphaTest: true,
+    //   flatShading: true
+    // })
+
+    // let backMaterial = new THREE.MeshStandardMaterial({
+    //   map: backTexture,
+    //   side: THREE.FrontSide,
+    //   roughness: 0.65,
+    //   metalness: 0.25,
+    //   alphaTest: true,
+    //   flatShading: true
+    // })
+
     let frontMaterial = new THREE.MeshStandardMaterial({
-      map: frontTexture,
+      // map: frontTexture,
+      color: 'red',
       side: THREE.BackSide,
       roughness: 0.65,
       metalness: 0.25,
@@ -117,7 +137,8 @@ export default class Ribbon {
     })
 
     let backMaterial = new THREE.MeshStandardMaterial({
-      map: backTexture,
+      // map: backTexture,
+      color: 'green',
       side: THREE.FrontSide,
       roughness: 0.65,
       metalness: 0.25,
@@ -125,32 +146,43 @@ export default class Ribbon {
       flatShading: true
     })
 
+    // const doubleSidedMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    // const doubleSidedMaterial = new THREE.MeshNormalMaterial( { side: THREE.DoubleSide, wireframe: true } )
 
     
 
 
 
 
-    this.geometry = new THREE.SphereBufferGeometry(1, 30,30);
-    this.plane = new THREE.Mesh(this.geometry, new THREE.MeshBasicMaterial({color: 0x00ff00,wireframe: true}));
-    this.scene.add(this.plane);
+    // this.geometry = new THREE.SphereBufferGeometry(1, 30,30);
+    // this.plane = new THREE.Mesh(this.geometry, new THREE.MeshBasicMaterial({color: 0x00ff00,wireframe: true}));
+    // this.scene.add(this.plane);
 
 
 
-    let num = 7;
-    let curvePoints = []
-    for (let i = 0; i < num; i++) {
-      let theta = i/num * Math.PI*2;
-        curvePoints.push(
-          new THREE.Vector3().setFromSphericalCoords(
-            1, Math.PI/2 + 0.9*(Math.random() - 0.5),theta
-          )
-        )
-    }
+    // let num = 7;
+    // let curvePoints = []
+    // for (let i = 0; i < num; i++) {
+    //   let theta = i/num * Math.PI*2;
+    //     curvePoints.push(
+    //       new THREE.Vector3().setFromSphericalCoords(
+    //         1, Math.PI/2 + 0.9*(Math.random() - 0.5),theta
+    //       )
+    //     )
+    // }
+    const curvePoints = [
+      new THREE.Vector3( 0, 0, 1.5 ),
+      new THREE.Vector3( 0, 0, 1.0 ),
+      new THREE.Vector3( 0, 0, 0.0 ),
+      new THREE.Vector3( .500, .500, -1.00 ),
+      new THREE.Vector3( 1, 1, -2.00 ),
+      new THREE.Vector3( 1, 2, -4.00 ),
+    ]
 
     const curve = new THREE.CatmullRomCurve3( curvePoints );
     curve.tension = 0.7;
-    curve.closed = true;
+    // curve.closed = true;
+    curve.closed = false;
 
     const points = curve.getPoints( 50 );
     const geometry = new THREE.BufferGeometry().setFromPoints( points );
@@ -165,7 +197,8 @@ export default class Ribbon {
 
     let number = 1000;
 
-    let frenetFrames = curve.computeFrenetFrames(number, true)
+    // let frenetFrames = curve.computeFrenetFrames(number, true)
+    let frenetFrames = curve.computeFrenetFrames(number, false)
     let spacedPoints = curve.getSpacedPoints(number)
     let tempPlane = new THREE.PlaneBufferGeometry(1,1,number,1)
     let dimensions = [-.1,0.1]
@@ -206,8 +239,8 @@ console.log( 'LANCE after binormalShift', binormalShift )
     // finalPoints[number + 1].copy()
     console.log(finalPoints[number + 1],'/number')
 
-    finalPoints[0].copy(finalPoints[number])
-    finalPoints[number+1].copy(finalPoints[2*number+1])
+    // finalPoints[0].copy(finalPoints[number])
+    // finalPoints[number+1].copy(finalPoints[2*number+1])
 
     // finalPoints.push(new THREE.Vector3(Math.random(),Math.random(),Math.random()))
 
@@ -224,7 +257,9 @@ console.log( 'LANCE after binormalShift', binormalShift )
 
     let finalMesh = new THREE.Mesh(
       tempPlane,
-      this.materials 
+      this.materials,
+      // new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true, wireframeLinewidth: 4 })
+      // doubleSidedMaterial,
     )
 
     this.scene.add(finalMesh);
@@ -235,16 +270,20 @@ console.log( 'LANCE after binormalShift', binormalShift )
 
   render() {
     if (!this.isPlaying) return;
-    this.time += 0.001;
-    requestAnimationFrame(this.render.bind(this));
-    this.renderer.render(this.scene, this.camera);
+    // this.time += 0.001;
+    // requestAnimationFrame(this.render.bind(this));
+    // this.renderer.render(this.scene, this.camera);
 
-    this.materials.forEach((m,i) => {
-      m.map.offset.setX(this.time)
-      if(i>0){
-        m.map.offset.setX(-this.time)
-      }
-    })
+    // this.materials.forEach((m,i) => {
+    //   m.map.offset.setX(this.time)
+    //   if(i>0){
+    //     m.map.offset.setX(-this.time)
+    //   }
+    // })
+
+    setTimeout( () => {
+      this.renderer.render(this.scene, this.camera);
+    }, 100 )
   }
 }
 
