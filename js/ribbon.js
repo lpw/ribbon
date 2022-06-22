@@ -133,7 +133,8 @@ export default class Ribbon {
       roughness: 0.65,
       metalness: 0.25,
       alphaTest: true,
-      flatShading: true
+      flatShading: true,
+      // wireframe: true,
     })
 
     let backMaterial = new THREE.MeshStandardMaterial({
@@ -143,7 +144,8 @@ export default class Ribbon {
       roughness: 0.65,
       metalness: 0.25,
       alphaTest: true,
-      flatShading: true
+      flatShading: true,
+      // wireframe: true,
     })
 
     // const doubleSidedMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
@@ -201,9 +203,11 @@ export default class Ribbon {
     let frenetFrames = curve.computeFrenetFrames(number, false)
     let spacedPoints = curve.getSpacedPoints(number)
     let tempPlane = new THREE.PlaneBufferGeometry(1,1,number,1)
-    let dimensions = [-.1,0.1]
+    // let dimensions = [-.1,0.1]
+    let dimensions = [ -0.1, 0.1 ]
 
     this.materials = [frontMaterial,backMaterial]
+    // this.materials = [frontMaterial]
 
     tempPlane.addGroup(0,6000,0)
     tempPlane.addGroup(0,6000,1)
@@ -215,24 +219,32 @@ export default class Ribbon {
     let temp2 = new THREE.Vector3();
 
     let finalPoints = []
+    let tubePoints = []
 
 
 
     dimensions.forEach(d=>{
+      tubePoints[ d ] = []
       for (let i = 0; i <= number; i++) {
         point = spacedPoints[i];
-console.log( 'LANCE d', d )
-console.log( 'LANCE before binormalShift', binormalShift )
-console.log( 'LANCE frenetFrames.binormals[i]', frenetFrames.binormals[i] )
+// console.log( 'LANCE d', d )
+// console.log( 'LANCE before binormalShift', binormalShift )
+// console.log( 'LANCE frenetFrames.binormals[i]', frenetFrames.binormals[i] )
         // binormalShift.add(frenetFrames.binormals[i]).multiplyScalar(d);
         binormalShift.copy(frenetFrames.binormals[i]).multiplyScalar(d);
         // binormalShift.copy(frenetFrames.normals[i]).multiplyScalar(d);
-console.log( 'LANCE after binormalShift', binormalShift )
+// console.log( 'LANCE after binormalShift', binormalShift )
+
+        const newPoint = new THREE.Vector3().copy(point).add(binormalShift)
 
         finalPoints.push(
-          new THREE.Vector3().copy(point).add(binormalShift)
+          // new THREE.Vector3().copy(point).add(binormalShift)
+          newPoint
           )
         
+        tubePoints[ d ].push(
+          newPoint
+          )
       }
     })
 
@@ -264,6 +276,26 @@ console.log( 'LANCE after binormalShift', binormalShift )
 
     this.scene.add(finalMesh);
 
+    dimensions.forEach(d=>{
+      // const tubeGeometry = new THREE.TubeGeometry()
+      // tubeGeometry.setFromPoints( tubePoints[ d ] );
+
+      const tubeCurve = new THREE.CatmullRomCurve3( tubePoints[ d ] );
+      tubeCurve.tension = 0.7;
+      tubeCurve.closed = false;
+
+      const tubeGeometry = new THREE.TubeGeometry( tubeCurve, 20, 0.01, 8, false )
+      // tubeGeometry.setFromPoints( tubePoints[ d ] );
+      tubeGeometry.addGroup(0,9999,0)
+      tubeGeometry.addGroup(0,9999,1)
+
+      let finalMesh = new THREE.Mesh(
+        tubeGeometry,
+        this.materials,
+      )
+
+      this.scene.add(finalMesh);
+    })
 
 
   }
