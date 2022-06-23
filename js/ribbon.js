@@ -3,8 +3,12 @@
 // https://www.patreon.com/allyourhtml/posts
 // https://gist.github.com/akella/a19954c9ee42e3ae85b76d0e06977535
 
-import * as THREE from "three";
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+// import * as THREE from "three";
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+// import { VertexTangentsHelper } from 'three/examples/jsm/helpers/VertexTangentsHelper.js';
+
+// import { GridHelper } from 'three/examples/jsm/helpers/GridHelper.js';
+// import { SkeletonHelper } from 'three/examples/jsm/helpers/SkeletonHelper.js';
 // import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // "dat.gui": "^0.7.9",
@@ -17,9 +21,17 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import front from '../front.png'
 import back from '../back.png'
 
+let THREE
+let OrbitControls
+let VertexTangentsHelper
 
 export default class Ribbon {
-  constructor(options) {
+  constructor( three, orbitControls, vertexTangentsHelper ) {
+    THREE = three
+    OrbitControls = orbitControls
+    VertexTangentsHelper = vertexTangentsHelper
+  }
+  explicitConstructor(options) {
     this.scene = new THREE.Scene();
 
     this.container = options.dom;
@@ -47,8 +59,38 @@ export default class Ribbon {
     this.time = 0;
 
     this.isPlaying = true;
-    
-    this.addObjects();
+  }
+
+  addAndRender({
+      curveObject,
+      finalMesh,
+      tubeMeshes,
+    }) {
+
+    this.scene.add( curveObject )
+
+    this.scene.add( finalMesh )
+
+    for( const tm in tubeMeshes ) {
+      this.scene.add( tubeMeshes[ tm ] )
+    }
+
+    // // curveObject.geometry.toNonIndexed()
+    // finalMesh.geometry.computeVertexNormals()
+    // finalMesh.geometry.computeTangents()
+    // const helper = new VertexTangentsHelper( finalMesh, 1, 0x00ffff, 1 );
+    // // const helper = new VertexTangentsHelper( geometry, 1, 0x00ffff, 1 );
+    // // const helper = new VertexTangentsHelper( curveObject, 1, 0x00ffff, 1 );
+    // this.scene.add(helper);
+
+    finalMesh.geometry.computeVertexNormals()
+    finalMesh.geometry.computeTangents()
+    const helper = new THREE.SkeletonHelper( finalMesh );
+    this.scene.add(helper);
+
+    const gridHelper = new THREE.GridHelper( 10, 10 );
+    this.scene.add( gridHelper );
+
     // this.resize();
     this.render();
     // this.setupResize();
@@ -65,8 +107,9 @@ export default class Ribbon {
     // let dirLight = new THREE.DirectionalLight(0xffffff,5)
     // dirLight.position.set(0,-10,-10)
     // let dirLight = new THREE.DirectionalLight(0x0000ff,5)
-    let dirLight = new THREE.DirectionalLight(0xffffff,10)
+    let dirLight = new THREE.DirectionalLight(0xffffff, 10)
     dirLight.position.set(0,5,5)
+    dirLight.position.set( 0, 5, 5 )
     this.scene.add(dirLight)
   }
 
@@ -91,10 +134,28 @@ export default class Ribbon {
   //   this.camera.updateProjectionMatrix();
   // }
 
-  addObjects() {
-
-    let frontTexture = new THREE.TextureLoader().load(front);
-    let backTexture = new THREE.TextureLoader().load(back);
+  getObjects( args = {} ) {
+    const { 
+      vectors = [
+        new THREE.Vector3( 0, 0, 1.5 ),
+        new THREE.Vector3( 0, 0, 1.0 ),
+        new THREE.Vector3( 0, 0, 0.0 ),
+        new THREE.Vector3( -.500, .2500, -0.500 ),
+        new THREE.Vector3( .500, .500, -1.00 ),
+        new THREE.Vector3( 1, 1, -2.00 ),
+        new THREE.Vector3( 1, 2, -3.00 ),
+        new THREE.Vector3( -2, 2.5, -4.00 ),
+      ], 
+      width = 0.1,
+      // frontColor = 'red',
+      // frontColor = '0x44aaff',
+      frontColor = 'blue',
+      // backColor = 'Aquamarine',
+      // backColor = 'green',
+      backColor = 'Aqua',
+    } = args
+    const frontTexture = new THREE.TextureLoader().load(front);
+    const backTexture = new THREE.TextureLoader().load(back);
 
     [frontTexture,backTexture].forEach(t=>{
       t.wrapS = 1000;
@@ -126,25 +187,53 @@ export default class Ribbon {
     //   flatShading: true
     // })
 
-    let frontMaterial = new THREE.MeshStandardMaterial({
+    let frontMaterialOld = new THREE.MeshStandardMaterial({
       // map: frontTexture,
       color: 'red',
       side: THREE.BackSide,
-      roughness: 0.65,
-      metalness: 0.25,
-      alphaTest: true,
-      flatShading: true,
+      // roughness: 0.65,
+      // metalness: 0.25,
+      // alphaTest: true,
+      // flatShading: true,
       // wireframe: true,
     })
 
-    let backMaterial = new THREE.MeshStandardMaterial({
-      // map: backTexture,
-      color: 'green',
+    // const frontMaterial = new THREE.MeshBasicMaterial( { 
+    //   color: 0xffff00,
+    //   side: THREE.BackSide,
+    //   // flatShading: false,
+    //   // wireframe: true,
+    // })
+    // const frontMaterial = new THREE.LineBasicMaterial( { 
+    //   color : 0x44aaff,
+    //   side: THREE.BackSide,
+    // } );
+    let frontMaterial = new THREE.MeshStandardMaterial({
+    // const frontMaterial = new THREE.MeshLambertMaterial({ 
+    // const frontMaterial = new THREE.MeshPhongMaterial({ 
+    // const frontMaterial = new THREE.MeshNormalMaterial({ 
       side: THREE.FrontSide,
+      // color: 'green',
+      // color: 0xb000bb, 
+      // color : 0x44aaff,
+      color: frontColor,
       roughness: 0.65,
       metalness: 0.25,
       alphaTest: true,
-      flatShading: true,
+      // flatShading: true,
+      // wireframe: false 
+    });
+
+    let backMaterial = new THREE.MeshStandardMaterial({
+    // let backMaterial = new THREE.MeshNormalMaterial({
+      side: THREE.BackSide,
+      // map: backTexture,
+      // color : 0x44aaff,
+      color: backColor,
+      roughness: 0.65,
+      metalness: 0.25,
+      alphaTest: true,
+      // flatShading: true,
       // wireframe: true,
     })
 
@@ -172,14 +261,7 @@ export default class Ribbon {
     //       )
     //     )
     // }
-    const curvePoints = [
-      new THREE.Vector3( 0, 0, 1.5 ),
-      new THREE.Vector3( 0, 0, 1.0 ),
-      new THREE.Vector3( 0, 0, 0.0 ),
-      new THREE.Vector3( .500, .500, -1.00 ),
-      new THREE.Vector3( 1, 1, -2.00 ),
-      new THREE.Vector3( 1, 2, -4.00 ),
-    ]
+    const curvePoints = vectors
 
     const curve = new THREE.CatmullRomCurve3( curvePoints );
     curve.tension = 0.7;
@@ -195,22 +277,26 @@ export default class Ribbon {
     const curveObject = new THREE.Line( geometry, material );
 
 
-    this.scene.add(curveObject);
+    // this.scene.add(curveObject);
 
-    let number = 1000;
+    let number = 10000;
 
     // let frenetFrames = curve.computeFrenetFrames(number, true)
     let frenetFrames = curve.computeFrenetFrames(number, false)
     let spacedPoints = curve.getSpacedPoints(number)
     let tempPlane = new THREE.PlaneBufferGeometry(1,1,number,1)
     // let dimensions = [-.1,0.1]
-    let dimensions = [ -0.1, 0.1 ]
+    let dimensions = [ -width, +width ]
 
-    this.materials = [frontMaterial,backMaterial]
+    this.materials = [ frontMaterial, backMaterial ]
+    // this.materials = [ backMaterial, frontMaterial ]
     // this.materials = [frontMaterial]
 
-    tempPlane.addGroup(0,6000,0)
-    tempPlane.addGroup(0,6000,1)
+    // tempPlane.addGroup(0,6000,0)
+    // tempPlane.addGroup(0,6000,1)
+    const nVertices = tempPlane.index ? tempPlane.index.count : tempPlane.attributes.position.count
+    tempPlane.addGroup( 0, nVertices, 0 )
+    tempPlane.addGroup( 0, nVertices, 1 )
 
 
     console.log(frenetFrames,spacedPoints)
@@ -259,6 +345,7 @@ export default class Ribbon {
     // finalPoints.copy
 
     tempPlane.setFromPoints(finalPoints)
+    // tempPlane.computeTangents()
     console.log(tempPlane,finalPoints)
 
     // console.log(finalPoints)
@@ -274,8 +361,9 @@ export default class Ribbon {
       // doubleSidedMaterial,
     )
 
-    this.scene.add(finalMesh);
+    // this.scene.add(finalMesh);
 
+    const tubeMeshes = []
     dimensions.forEach(d=>{
       // const tubeGeometry = new THREE.TubeGeometry()
       // tubeGeometry.setFromPoints( tubePoints[ d ] );
@@ -284,27 +372,33 @@ export default class Ribbon {
       tubeCurve.tension = 0.7;
       tubeCurve.closed = false;
 
-      const tubeGeometry = new THREE.TubeGeometry( tubeCurve, 20, 0.01, 8, false )
+      const tubeGeometry = new THREE.TubeGeometry( tubeCurve, 200, 0.005, 8, false )
       // tubeGeometry.setFromPoints( tubePoints[ d ] );
-      tubeGeometry.addGroup(0,9999,0)
-      tubeGeometry.addGroup(0,9999,1)
+      const nVertices = tubeGeometry.index ? tubeGeometry.index.count : tubeGeometry.attributes.position.count
+      tubeGeometry.addGroup( 0, nVertices, 0 )
+      tubeGeometry.addGroup( 0, nVertices, 1 )
 
-      let finalMesh = new THREE.Mesh(
+      tubeMeshes[ d ] = new THREE.Mesh(
         tubeGeometry,
         this.materials,
       )
 
-      this.scene.add(finalMesh);
+      // this.scene.add( tubeMeshes[ d ] );
     })
 
+    return {
+      curveObject,
+      finalMesh,
+      tubeMeshes,
+    }
 
   }
 
   render() {
     if (!this.isPlaying) return;
-    // this.time += 0.001;
-    // requestAnimationFrame(this.render.bind(this));
-    // this.renderer.render(this.scene, this.camera);
+    this.time += 0.001;
+    requestAnimationFrame(this.render.bind(this));
+    this.renderer.render(this.scene, this.camera);
 
     // this.materials.forEach((m,i) => {
     //   m.map.offset.setX(this.time)
@@ -313,12 +407,8 @@ export default class Ribbon {
     //   }
     // })
 
-    setTimeout( () => {
-      this.renderer.render(this.scene, this.camera);
-    }, 100 )
+    // setTimeout( () => {
+    //   this.renderer.render(this.scene, this.camera);
+    // }, 100 )
   }
 }
-
-new Ribbon({
-  dom: document.getElementById("container")
-});

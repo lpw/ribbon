@@ -13,8 +13,9 @@ ideas for improvement:
 banking based on curves (derivations of normals/tangents)
 edges on path (lines, tubes)
 translucency and shading, esp in the middle of the ribbon
-time/distance tracks
+animation down path
 altitude bridges, mapping to ground
+time/distance tracks
 speckling along path
 better path colors, materials, translucency, shading, gradients, lighting, reflection, speckling, ...
 other examples like AceTracks?
