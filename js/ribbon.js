@@ -23,13 +23,24 @@ import back from '../back.png'
 
 let THREE
 let OrbitControls
+// let BufferGeometryUtils
+let mergeBufferGeometries
+let mergeBufferAttributes
 let VertexTangentsHelper
 
 export default class Ribbon {
-  constructor( three, orbitControls, vertexTangentsHelper ) {
-    THREE = three
-    OrbitControls = orbitControls
-    VertexTangentsHelper = vertexTangentsHelper
+  constructor( { 
+    THREE: _THREE, 
+    OrbitControls: _OrbitControls, 
+    mergeBufferGeometries: _mergeBufferGeometries, 
+    mergeBufferAttributes: _mergeBufferAttributes, 
+    VertexTangentsHelper: _VertexTangentsHelper
+  } ) {
+    THREE = _THREE
+    OrbitControls = _OrbitControls
+    mergeBufferGeometries = _mergeBufferGeometries,
+    mergeBufferAttributes = _mergeBufferAttributes,
+    VertexTangentsHelper = _VertexTangentsHelper
   }
   explicitConstructor(options) {
     this.scene = new THREE.Scene();
@@ -63,30 +74,41 @@ export default class Ribbon {
 
   addAndRender({
       curveObject,
+      ribbonMesh,
+      tubeMeshes = [],
       finalMesh,
-      tubeMeshes,
     }) {
 
-    this.scene.add( curveObject )
+    if( curveObject ) {
+      this.scene.add( curveObject )
+    }
 
-    this.scene.add( finalMesh )
+    if( ribbonMesh ) {
+      this.scene.add( ribbonMesh )
+    }
 
     for( const tm in tubeMeshes ) {
       this.scene.add( tubeMeshes[ tm ] )
     }
 
+    if( finalMesh ) {
+      this.scene.add( finalMesh )
+    }
+
     // // curveObject.geometry.toNonIndexed()
-    // finalMesh.geometry.computeVertexNormals()
-    // finalMesh.geometry.computeTangents()
-    // const helper = new VertexTangentsHelper( finalMesh, 1, 0x00ffff, 1 );
+    // ribbonMesh.geometry.computeVertexNormals()
+    // ribbonMesh.geometry.computeTangents()
+    // const helper = new VertexTangentsHelper( ribbonMesh, 1, 0x00ffff, 1 );
     // // const helper = new VertexTangentsHelper( geometry, 1, 0x00ffff, 1 );
     // // const helper = new VertexTangentsHelper( curveObject, 1, 0x00ffff, 1 );
     // this.scene.add(helper);
 
-    finalMesh.geometry.computeVertexNormals()
-    finalMesh.geometry.computeTangents()
-    const helper = new THREE.SkeletonHelper( finalMesh );
-    this.scene.add(helper);
+    if( ribbonMesh ) {
+      ribbonMesh.geometry.computeVertexNormals()
+      ribbonMesh.geometry.computeTangents()
+      const helper = new THREE.SkeletonHelper( ribbonMesh );
+      this.scene.add(helper);
+    }
 
     const gridHelper = new THREE.GridHelper( 10, 10 );
     this.scene.add( gridHelper );
@@ -108,8 +130,8 @@ export default class Ribbon {
     // dirLight.position.set(0,-10,-10)
     // let dirLight = new THREE.DirectionalLight(0x0000ff,5)
     let dirLight = new THREE.DirectionalLight(0xffffff, 10)
-    dirLight.position.set(0,5,5)
-    dirLight.position.set( 0, 5, 5 )
+    // dirLight.position.set(0,5,5)
+    dirLight.position.set( 5, 15, 15 )
     this.scene.add(dirLight)
   }
 
@@ -213,6 +235,7 @@ export default class Ribbon {
     // const frontMaterial = new THREE.MeshPhongMaterial({ 
     // const frontMaterial = new THREE.MeshNormalMaterial({ 
       side: THREE.FrontSide,
+      // side: THREE.BackSide,
       // color: 'green',
       // color: 0xb000bb, 
       // color : 0x44aaff,
@@ -227,6 +250,7 @@ export default class Ribbon {
     let backMaterial = new THREE.MeshStandardMaterial({
     // let backMaterial = new THREE.MeshNormalMaterial({
       side: THREE.BackSide,
+      // side: THREE.FrontSide,
       // map: backTexture,
       // color : 0x44aaff,
       color: backColor,
@@ -354,14 +378,14 @@ export default class Ribbon {
 
 
 
-    let finalMesh = new THREE.Mesh(
+    let ribbonMesh = new THREE.Mesh(
       tempPlane,
       this.materials,
       // new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true, wireframeLinewidth: 4 })
       // doubleSidedMaterial,
     )
 
-    // this.scene.add(finalMesh);
+    // this.scene.add(ribbonMesh);
 
     const tubeMeshes = []
     dimensions.forEach(d=>{
@@ -373,6 +397,7 @@ export default class Ribbon {
       tubeCurve.closed = false;
 
       const tubeGeometry = new THREE.TubeGeometry( tubeCurve, 200, 0.005, 8, false )
+      // const tubeGeometry = new THREE.TubeGeometry( tubeCurve, 200, 5, 8, false )
       // tubeGeometry.setFromPoints( tubePoints[ d ] );
       const nVertices = tubeGeometry.index ? tubeGeometry.index.count : tubeGeometry.attributes.position.count
       tubeGeometry.addGroup( 0, nVertices, 0 )
@@ -386,10 +411,43 @@ export default class Ribbon {
       // this.scene.add( tubeMeshes[ d ] );
     })
 
+    // var finalGeometry = new THREE.BufferGeometry();
+    // // ribbonMesh.updateMatrix(); // as needed
+    // // finalGeometry.merge( ribbonMesh.geometry, ribbonMesh.matrix )
+    // // finalGeometry.merge( ribbonMesh.geometry )
+    // // finalGeometry = tempPlane
+    // // finalGeometry = finalGeometry.merge( tempPlane )
+    // // finalGeometry.merge( tempPlane )
+    // const test = finalGeometry.merge( tempPlane )
+    // console.log( 'LANCE finalGeometry.merge( tempPlane ) test', !!test, test )
+    // console.log( 'LANCE finalGeometry', finalGeometry )
+    // console.log( 'LANCE tempPlane', tempPlane )
+    // // finalGeometry.merge( tempPlane, 0 )
+    // // for( const tm in tubeMeshes ) {
+    // //   tubeMeshes[ tm ].updateMatrix(); // as needed
+    // //   finalGeometry.merge(  tubeMeshes[ tm ].geometry, tubeMeshes[ tm ].matrix )
+    // // }
+    // const finalMesh = new THREE.Mesh(
+    //   finalGeometry, 
+    //   this.materials
+    // )
+
+    // const finalGeometry = mergeBufferGeometries( tubeMeshes )
+    // const finalGeometry = myMergeBufferGeometries( [ tempPlane ], true )
+    const finalGeometry = mergeBufferGeometries( tubeMeshes.concat( tempPlane ), true )
+    console.log( 'LANCE tempPlane', tempPlane )
+    console.log( 'LANCE finalGeometry', finalGeometry )
+    // mergeBufferGeometries only adds one group
+    const finalMesh = new THREE.Mesh(
+      finalGeometry, 
+      [ this.materials[ 1 ], this.materials[ 0 ] ],
+    )
+
     return {
       curveObject,
-      finalMesh,
+      ribbonMesh,
       tubeMeshes,
+      // finalMesh,
     }
 
   }
@@ -411,4 +469,207 @@ export default class Ribbon {
     //   this.renderer.render(this.scene, this.camera);
     // }, 100 )
   }
+}
+
+function myMergeBufferGeometries( geometries, useGroups = false ) {
+
+  const isIndexed = geometries[ 0 ].index !== null;
+
+  const attributesUsed = new Set( Object.keys( geometries[ 0 ].attributes ) );
+  const morphAttributesUsed = new Set( Object.keys( geometries[ 0 ].morphAttributes ) );
+
+  const attributes = {};
+  const morphAttributes = {};
+
+  const morphTargetsRelative = geometries[ 0 ].morphTargetsRelative;
+
+  const mergedGeometry = new THREE.BufferGeometry();
+
+  let offset = 0;
+
+  for ( let i = 0; i < geometries.length; ++ i ) {
+
+    const geometry = geometries[ i ];
+    let attributesCount = 0;
+
+    // ensure that all geometries are indexed, or none
+
+    if ( isIndexed !== ( geometry.index !== null ) ) {
+
+      console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.' );
+      return null;
+
+    }
+
+    // gather attributes, exit early if they're different
+
+    for ( const name in geometry.attributes ) {
+
+      if ( ! attributesUsed.has( name ) ) {
+
+        console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure "' + name + '" attribute exists among all geometries, or in none of them.' );
+        return null;
+
+      }
+
+      if ( attributes[ name ] === undefined ) attributes[ name ] = [];
+
+      attributes[ name ].push( geometry.attributes[ name ] );
+
+      attributesCount ++;
+
+    }
+
+    // ensure geometries have the same number of attributes
+
+    if ( attributesCount !== attributesUsed.size ) {
+
+      console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. Make sure all geometries have the same number of attributes.' );
+      return null;
+
+    }
+
+    // gather morph attributes, exit early if they're different
+
+    if ( morphTargetsRelative !== geometry.morphTargetsRelative ) {
+
+      console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. .morphTargetsRelative must be consistent throughout all geometries.' );
+      return null;
+
+    }
+
+    for ( const name in geometry.morphAttributes ) {
+
+      if ( ! morphAttributesUsed.has( name ) ) {
+
+        console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '.  .morphAttributes must be consistent throughout all geometries.' );
+        return null;
+
+      }
+
+      if ( morphAttributes[ name ] === undefined ) morphAttributes[ name ] = [];
+
+      morphAttributes[ name ].push( geometry.morphAttributes[ name ] );
+
+    }
+
+    // gather .userData
+
+    mergedGeometry.userData.mergedUserData = mergedGeometry.userData.mergedUserData || [];
+    mergedGeometry.userData.mergedUserData.push( geometry.userData );
+
+    if ( false && useGroups ) {
+
+      let count;
+
+      if ( isIndexed ) {
+
+        count = geometry.index.count;
+
+      } else if ( geometry.attributes.position !== undefined ) {
+
+        count = geometry.attributes.position.count;
+
+      } else {
+
+        console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed with geometry at index ' + i + '. The geometry must have either an index or a position attribute' );
+        return null;
+
+      }
+
+      mergedGeometry.addGroup( offset, count, i );
+
+      offset += count;
+
+    }
+
+    if ( useGroups ) {
+      for ( let gi = 0, gil = geometry.groups.length; gi < gil; gi ++ ) {
+        const { start, count, materialIndex } = geometry.groups[ gi ];
+        mergedGeometry.addGroup( start, count, materialIndex );
+      }
+    }
+
+  }
+
+  // merge indices
+
+  if ( isIndexed ) {
+
+    let indexOffset = 0;
+    const mergedIndex = [];
+
+    for ( let i = 0; i < geometries.length; ++ i ) {
+
+      const index = geometries[ i ].index;
+
+      for ( let j = 0; j < index.count; ++ j ) {
+
+        mergedIndex.push( index.getX( j ) + indexOffset );
+
+      }
+
+      indexOffset += geometries[ i ].attributes.position.count;
+
+    }
+
+    mergedGeometry.setIndex( mergedIndex );
+
+  }
+
+  // merge attributes
+
+  for ( const name in attributes ) {
+
+    const mergedAttribute = mergeBufferAttributes( attributes[ name ] );
+
+    if ( ! mergedAttribute ) {
+
+      console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed while trying to merge the ' + name + ' attribute.' );
+      return null;
+
+    }
+
+    mergedGeometry.setAttribute( name, mergedAttribute );
+
+  }
+
+  // merge morph attributes
+
+  for ( const name in morphAttributes ) {
+
+    const numMorphTargets = morphAttributes[ name ][ 0 ].length;
+
+    if ( numMorphTargets === 0 ) break;
+
+    mergedGeometry.morphAttributes = mergedGeometry.morphAttributes || {};
+    mergedGeometry.morphAttributes[ name ] = [];
+
+    for ( let i = 0; i < numMorphTargets; ++ i ) {
+
+      const morphAttributesToMerge = [];
+
+      for ( let j = 0; j < morphAttributes[ name ].length; ++ j ) {
+
+        morphAttributesToMerge.push( morphAttributes[ name ][ j ][ i ] );
+
+      }
+
+      const mergedMorphAttribute = mergeBufferAttributes( morphAttributesToMerge );
+
+      if ( ! mergedMorphAttribute ) {
+
+        console.error( 'THREE.BufferGeometryUtils: .mergeBufferGeometries() failed while trying to merge the ' + name + ' morphAttribute.' );
+        return null;
+
+      }
+
+      mergedGeometry.morphAttributes[ name ].push( mergedMorphAttribute );
+
+    }
+
+  }
+
+  return mergedGeometry;
+
 }
