@@ -222,10 +222,10 @@ export default class Ribbon {
       width = 0.1,
       // frontColor = 'red',
       // frontColor = '0x44aaff',
-      frontColor = 'blue',
+      frontColor = 'Aqua',
       // backColor = 'Aquamarine',
       // backColor = 'green',
-      backColor = 'Aqua',
+      backColor = 'blue',
     } = args
     const frontTexture = new THREE.TextureLoader().load(front);
     const backTexture = new THREE.TextureLoader().load(back);
@@ -285,8 +285,9 @@ export default class Ribbon {
     // const frontMaterial = new THREE.MeshLambertMaterial({ 
     // const frontMaterial = new THREE.MeshPhongMaterial({ 
     // const frontMaterial = new THREE.MeshNormalMaterial({ 
-      side: THREE.FrontSide,
+      // side: THREE.FrontSide,
       // side: THREE.BackSide,
+      side: THREE.DoubleSide,
 
       // color: 'green',
       // color: 0xb000bb, 
@@ -300,8 +301,8 @@ export default class Ribbon {
       // flatShading: true,
       // wireframe: false 
 
-      // opacity: 0.5,
-      // transparent: true,
+      opacity: 0.7,
+      transparent: true,
     });
 
     let backMaterial = new THREE.MeshStandardMaterial({
@@ -375,15 +376,16 @@ export default class Ribbon {
     // let dimensions = [-.1,0.1]
     let dimensions = [ -width, +width ]
 
-    this.materials = [ frontMaterial, backMaterial ]
+    // this.materials = [ frontMaterial, backMaterial ]
     // this.materials = [ backMaterial, frontMaterial ]
-    // this.materials = [frontMaterial]
+    // this.materials = [ frontMaterial, frontMaterial ]
+    this.materials = [ frontMaterial ]
 
     // tempPlane.addGroup(0,6000,0)
     // tempPlane.addGroup(0,6000,1)
     const nVertices = tempPlane.index ? tempPlane.index.count : tempPlane.attributes.position.count
     tempPlane.addGroup( 0, nVertices, 0 )
-    tempPlane.addGroup( 0, nVertices, 1 )
+    // tempPlane.addGroup( 0, nVertices, 1 )
 
 
     console.log(frenetFrames,spacedPoints)
