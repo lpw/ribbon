@@ -27,6 +27,8 @@ let OrbitControls
 let mergeBufferGeometries
 let mergeBufferAttributes
 let VertexTangentsHelper
+let OBJLoader
+let MTLLoader
 
 export default class Ribbon {
   constructor( { 
@@ -34,13 +36,17 @@ export default class Ribbon {
     OrbitControls: _OrbitControls, 
     mergeBufferGeometries: _mergeBufferGeometries, 
     mergeBufferAttributes: _mergeBufferAttributes, 
-    VertexTangentsHelper: _VertexTangentsHelper
+    VertexTangentsHelper: _VertexTangentsHelper,
+    OBJLoader: _OBJLoader,
+    MTLLoader: _MTLLoader
   } ) {
     THREE = _THREE
     OrbitControls = _OrbitControls
     mergeBufferGeometries = _mergeBufferGeometries,
     mergeBufferAttributes = _mergeBufferAttributes,
-    VertexTangentsHelper = _VertexTangentsHelper
+    VertexTangentsHelper = _VertexTangentsHelper,
+    OBJLoader = _OBJLoader,
+    MTLLoader = _MTLLoader
   }
   explicitConstructor(options) {
     this.scene = new THREE.Scene();
@@ -67,9 +73,13 @@ export default class Ribbon {
     // this.camera.position.set(0, 0, 2);
     this.camera.position.set(0, 0.5, 2);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    // this.controls.enableDamping = true
     this.time = 0;
 
     this.isPlaying = true;
+
+    this.objLoader = new OBJLoader()
+    this.mtlLoader = new MTLLoader()
   }
 
   addAndRender({
@@ -106,21 +116,61 @@ export default class Ribbon {
     if( ribbonMesh ) {
       ribbonMesh.geometry.computeVertexNormals()
       ribbonMesh.geometry.computeTangents()
-      const helper = new THREE.SkeletonHelper( ribbonMesh );
-      this.scene.add(helper);
+      // const helper = new THREE.SkeletonHelper( ribbonMesh );
+      // this.scene.add(helper);
     }
 
     const gridHelper = new THREE.GridHelper( 10, 10 );
     this.scene.add( gridHelper );
+
+    // this.scene.add(new THREE.AxesHelper(1))
 
     // this.resize();
     this.render();
     // this.setupResize();
     this.addLights()
     // this.settings();
+
+    this.addObj()
   }
 
-
+  addObj() {
+      this.mtlLoader.load(
+        // 'file:///Users/lance.welsh/git/ribbon/g6.obj',
+        'http://127.0.0.1:8000/g6.mtl',
+        (materials) => {
+          // this.objLoader.setMaterials(materials)
+          this.objLoader.load(
+            // 'file:///Users/lance.welsh/git/ribbon/g6.obj',
+            'http://127.0.0.1:8000/g6.obj',
+            (object) => {
+                // (object.children[0] as THREE.Mesh).material = material
+                // object.traverse(function (child) {
+                //     if ((child as THREE.Mesh).isMesh) {
+                //         (child as THREE.Mesh).material = material
+                //     }
+                // })
+                object.position.set(-300, 100, -500)
+                // object.position.set(-300, 0, -100)
+                this.scene.add(object)
+            },
+            (xhr) => {
+                console.log( 'LANCE objLoader', (xhr.loaded / xhr.total) * 100 + '% loaded' )
+            },
+            (error) => {
+                console.log( 'LANCE objLoader', error )
+            }
+        )
+        },
+        (xhr) => {
+            console.log( 'LANCE mtlLoader', (xhr.loaded / xhr.total) * 100 + '% loaded' )
+        },
+        (error) => {
+            console.log( 'LANCE mtlLoader', error )
+        }
+      )
+  }
+    
   addLights(){
 
     // this.scene.add(new THREE.AmbientLight(0xffffff,0.86))
@@ -159,14 +209,15 @@ export default class Ribbon {
   getObjects( args = {} ) {
     const { 
       vectors = [
-        new THREE.Vector3( 0, 0, 1.5 ),
-        new THREE.Vector3( 0, 0, 1.0 ),
-        new THREE.Vector3( 0, 0, 0.0 ),
+        new THREE.Vector3( 0, 0.05, 1.5 ),
+        new THREE.Vector3( 0, 0.05, 1.0 ),
+        new THREE.Vector3( 0, 0.05, 0.0 ),
         new THREE.Vector3( -.500, .2500, -0.500 ),
         new THREE.Vector3( .500, .500, -1.00 ),
         new THREE.Vector3( 1, 1, -2.00 ),
-        new THREE.Vector3( 1, 2, -3.00 ),
-        new THREE.Vector3( -2, 2.5, -4.00 ),
+        new THREE.Vector3( 1, 1.5, -3.00 ),
+        new THREE.Vector3( -1.75, 2, -4.00 ),
+        new THREE.Vector3( -3.5, 3.5, -9.00 ),
       ], 
       width = 0.1,
       // frontColor = 'red',
@@ -236,29 +287,41 @@ export default class Ribbon {
     // const frontMaterial = new THREE.MeshNormalMaterial({ 
       side: THREE.FrontSide,
       // side: THREE.BackSide,
+
       // color: 'green',
       // color: 0xb000bb, 
       // color : 0x44aaff,
       color: frontColor,
+
       roughness: 0.65,
       metalness: 0.25,
-      alphaTest: true,
+
+      // alphaTest: true,
       // flatShading: true,
       // wireframe: false 
+
+      // opacity: 0.5,
+      // transparent: true,
     });
 
     let backMaterial = new THREE.MeshStandardMaterial({
     // let backMaterial = new THREE.MeshNormalMaterial({
       side: THREE.BackSide,
       // side: THREE.FrontSide,
+
       // map: backTexture,
       // color : 0x44aaff,
       color: backColor,
+
       roughness: 0.65,
       metalness: 0.25,
-      alphaTest: true,
+
+      // alphaTest: true,
       // flatShading: true,
-      // wireframe: true,
+      // wireframe: false,
+
+      // opacity: 0.99,
+      // transparent: true,
     })
 
     // const doubleSidedMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
@@ -433,18 +496,21 @@ export default class Ribbon {
     // )
 
     // const finalGeometry = mergeBufferGeometries( tubeMeshes )
+    // const finalGeometry = myMergeBufferGeometries( [ ribbonMesh.geometry ], true )
+    // const finalGeometry = myMergeBufferGeometries( tubeMeshes.concat( tempPlane ), true )
     // const finalGeometry = myMergeBufferGeometries( [ tempPlane ], true )
-    const finalGeometry = mergeBufferGeometries( tubeMeshes.concat( tempPlane ), true )
+    const finalGeometry = myMergeBufferGeometries( [ ribbonMesh.geometry ], true )
     console.log( 'LANCE tempPlane', tempPlane )
     console.log( 'LANCE finalGeometry', finalGeometry )
     // mergeBufferGeometries only adds one group
     const finalMesh = new THREE.Mesh(
       finalGeometry, 
+      // this.materials,
       [ this.materials[ 1 ], this.materials[ 0 ] ],
     )
 
     return {
-      curveObject,
+      // curveObject,
       ribbonMesh,
       tubeMeshes,
       // finalMesh,
