@@ -301,7 +301,7 @@ export default class Ribbon {
       // flatShading: true,
       // wireframe: false 
 
-      opacity: 0.7,
+      opacity: 0.5,
       transparent: true,
     });
 
@@ -512,7 +512,8 @@ export default class Ribbon {
     )
 
     return {
-      // curveObject,
+      points,
+      curveObject,
       ribbonMesh,
       tubeMeshes,
       // finalMesh,
